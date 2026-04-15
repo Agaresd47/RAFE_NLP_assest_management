@@ -1,0 +1,98 @@
+{
+  "tech_infra_platforms": {
+    "ecosystem_control": "How does the filing describe control over key layers of the technology stack (silicon, infrastructure, software, distribution) and its implications for long-term competitive advantage?",
+    "compute_intensity": "How does the filing describe demand driven by AI, datacenter expansion, or increasing compute intensity across customer workloads?",
+    "platform_dependency": "What can you say about dependency on hyperscalers, OEMs, or platform gatekeepers for revenue concentration or distribution access?",
+    "customer_concentration": "How does the filing describe revenue concentration among large customers and associated bargaining power risks?",
+    "capital_allocation_signal": "How does management justify capital deployment across M&A, buybacks, dividends, and internal R&D investment?"
+  },
+  "ai_infrastructure_cycle": {
+    "ai_datacenter_buildout": "How does the filing describe exposure to AI-driven datacenter buildouts and associated capital expenditure cycles?",
+    "inference_vs_training_mix": "What can you say about exposure to AI training versus inference workloads and how that mix is evolving?",
+    "supply_constraints_ai": "How does the filing describe bottlenecks in advanced packaging, HBM memory, substrates, or foundry allocation?",
+    "hyperscaler_concentration": "What can you say about revenue exposure to hyperscalers or large AI infrastructure buyers?",
+    "ai_monetization_realism": "How does the filing describe monetization of AI offerings versus experimental, pilot-stage, or narrative-driven deployments?"
+  },
+  "product_platform_evolution": {
+    "roadmap_conviction": "How does the filing describe visibility into next-generation product cycles and their expected revenue contribution?",
+    "attach_rate_expansion": "What can you say about cross-product attach rates and suite expansion within the installed customer base?",
+    "ecosystem_lockin": "How does the filing describe switching costs, interoperability, and customer stickiness?",
+    "platform_unification": "What can you say about efforts to unify products into integrated platforms rather than standalone point solutions?",
+    "r_and_d_intensity": "How does the filing describe R&D investment intensity and strategic prioritization of innovation initiatives?"
+  },
+  "pricing_and_margin_power": {
+    "infrastructure_pricing": "How does the filing describe pricing power in mission-critical infrastructure, silicon, or enterprise software offerings?",
+    "silicon_asp_mix": "What can you say about average selling price expansion driven by mix shifts toward higher-performance silicon or premium software tiers?",
+    "cost_curve_advantage": "How does the filing describe structural cost advantages such as process-node leadership, scale economics, or software leverage?",
+    "gross_margin_mix": "What can you say about margin expansion or compression driven by product mix, AI workloads, or services growth?"
+  },
+  "capital_intensity_and_cycle": {
+    "capex_signal": "How does the filing describe capital expenditure trends and their strategic purpose (capacity expansion, AI infrastructure, manufacturing scale)?",
+    "cyclicality_exposure": "What can you say about exposure to semiconductor, enterprise IT, or hardware spending cycles?",
+    "inventory_normalization": "How does the filing describe inventory levels, channel digestion, or normalization trends?",
+    "working_capital_discipline": "What can you say about working capital management and cash conversion trends?"
+  },
+  "m_and_a_and_corpdev": {
+    "strategic_stack_expansion": "How does the filing describe acquisitions that expand the company vertically or horizontally within the technology stack?",
+    "ai_capability_acquisition": "What can you say about acquisitions aimed at strengthening AI capabilities, proprietary data assets, or model development?",
+    "integration_execution_risk": "How does the filing describe integration risks, restructuring costs, or operational challenges from recent acquisitions?",
+    "inorganic_growth_mix": "What can you say about the proportion of growth driven by acquisitions versus organic expansion?",
+    "divestiture_focus": "How does the filing describe divestitures or portfolio pruning as part of strategic refocusing?",
+    "synergy_realization": "What can you say about expected or realized revenue and cost synergies from transactions?"
+  },
+  "structural_risks_tech": {
+    "export_controls_silicon": "How does the filing describe export controls, geopolitical restrictions, or licensing requirements affecting advanced semiconductor or AI sales?",
+    "open_source_disruption": "What can you say about open-source competition impacting monetization or pricing power?",
+    "platform_policy_risk": "How does the filing describe exposure to platform policy changes (app stores, cloud marketplaces, ecosystem governance)?",
+    "supply_chain_concentration": "What can you say about geographic concentration of suppliers and mitigation strategies for supply risk?"
+  },
+  "go_to_market_and_distribution": {
+    "sales_cycle_duration": "How does the filing describe sales cycle length, deal timing, and procurement friction, and what is changing versus prior periods?",
+    "partner_channel_leverage": "What does the filing say about reliance on channel partners/SIs/MSPs for bookings, and how that affects margin and control of customer relationships?",
+    "marketplace_take_rates": "How does the filing describe cloud marketplace contribution, take rates, and any constraints imposed by marketplace rules?",
+    "public_sector_procurement": "What does the filing say about public-sector exposure, procurement cycles, and compliance requirements shaping pipeline conversion?",
+    "sales_productivity_unit_econ": "How does the filing describe sales productivity (rep ramp, quota attainment, CAC payback) and whether unit economics are improving or deteriorating?"
+  },
+  "competitive_dynamics_and_substitution": {
+    "competitive_displacement": "What evidence does the filing provide of competitive wins/losses and displacement dynamics (who, where, why)?",
+    "bundle_vs_best_of_breed": "How does the filing describe customer preference shifting toward bundled suites versus best-of-breed tools?",
+    "hyperscaler_native_substitution": "What does the filing imply about competition from hyperscaler native offerings and customer switching behavior?",
+    "price_competition_discounting": "How does the filing describe competitive pricing pressure, discounting, and changes in deal terms?",
+    "adjacent_entrants_new_modes": "What does the filing say about new entrants or shifting architectures that could make current offerings less relevant?"
+  },
+  "security_privacy_and_resilience": {
+    "breach_incident_history": "How does the filing describe security incidents (if any), remediation actions, and customer or financial impact?",
+    "uptime_outages_sla_risk": "What does the filing say about outages, SLA performance, reliability investments, and service credits?",
+    "data_residency_and_privacy": "How does the filing describe data residency, privacy compliance, and related constraints on go-to-market?",
+    "certifications_and_audits": "What certifications/audits (SOC2/ISO/FedRAMP/PCI) are emphasized, and what gaps or costs are discussed?",
+    "supply_chain_security": "How does the filing describe supply chain security (vendors, components, SBOM, third-party risk), and what mitigations are in place?"
+  },
+  "regulatory_legal_and_antitrust": {
+    "antitrust_platform_scrutiny": "How does the filing describe antitrust or platform-regulation exposure and potential business model impacts?",
+    "ai_regulation_compliance": "What does the filing say about AI-specific regulation (responsible AI, transparency, safety) and compliance investments?",
+    "privacy_enforcement_risk": "How does the filing describe privacy enforcement exposure (GDPR/CCPA/sector rules) and how risk is managed?",
+    "ip_litigation_patents": "What does the filing say about IP litigation risk, patent posture, or royalty/licensing dependencies?",
+    "cross_border_data_trade": "How does the filing describe cross-border data transfer rules and their impact on product architecture or regional growth?"
+  },
+  "data_moat_and_ecosystem_gravity": {
+    "data_rights_access": "How does the filing describe access to proprietary data, customer data rights, and constraints on model training/use?",
+    "developer_adoption_metrics": "What does the filing say about developer adoption (API usage, SDKs, community growth) and why it\u2019s accelerating or slowing?",
+    "integration_density": "How does the filing describe integration breadth/depth and its role in retention and expansion?",
+    "ecosystem_revenue_shares": "What does the filing say about ecosystem monetization (rev share, fees, partner incentives) and related tradeoffs?",
+    "data_feedback_loops": "How does the filing describe product-learning loops (telemetry, model improvement, usage data) that increase performance over time?"
+  },
+  "financial_quality_and_balance_sheet": {
+    "liquidity_and_runway": "How does the filing describe liquidity, cash position, revolver access, and downside runway under stress scenarios?",
+    "debt_maturity_interest_sensitivity": "What does the filing say about debt maturities, refinancing risk, and sensitivity to interest rates?",
+    "stock_based_comp_dilution": "How does the filing describe SBC trends, dilution, and whether buybacks offset dilution?",
+    "cash_conversion_quality": "What does the filing say about cash conversion (CFO vs NI), collections, and any deterioration in payment terms?",
+    "contingent_liabilities": "How does the filing describe contingencies (legal, tax, warranty, restructuring) and potential magnitude/timing?"
+  },
+  "management_quality_and_incentives": {
+    "kpi_selection_and_changes": "How does the filing define and update key KPIs (ARR, NRR, usage, backlog), and are there metric definition changes over time?",
+    "guidance_philosophy": "What does the filing imply about management\u2019s guidance posture, confidence language, and conservatism vs optimism?",
+    "incentive_alignment": "How does the filing describe executive compensation incentives (growth vs margin vs FCF), and what behavior does it encourage?",
+    "governance_risk_controls": "What does the filing say about governance, internal controls, and any material weaknesses or remediation efforts?",
+    "execution_track_record": "How does the filing describe execution against prior commitments (product launches, integration, cost programs) and any slippage?"
+  }
+}
