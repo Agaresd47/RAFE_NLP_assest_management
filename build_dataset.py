@@ -200,11 +200,11 @@ def sanitize_auditor_output_single(audit: dict, include_cot: bool = True) -> str
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--raw_root",     default=r"E:\nlpas\stock\MDA_Raw")
-    ap.add_argument("--extract_root", default=r"E:\nlpas\stock\Extract")
-    ap.add_argument("--questions",    default=r"E:\nlpas\stock\tech_sentiment_questions.json")
-    ap.add_argument("--miner_out",    default=r"E:\nlpas\stock\hf_miner_v3")
-    ap.add_argument("--auditor_out",  default=r"E:\nlpas\stock\hf_auditor_v3")
+    ap.add_argument("--raw_root",     default="/gpfs/projects/p32908/data/nlp/MDA_Raw")
+    ap.add_argument("--extract_root", default="/gpfs/projects/p32908/data/nlp/Extract")
+    ap.add_argument("--questions",    default="/gpfs/projects/p32908/data/nlp/tech_sentiment_questions.json")
+    ap.add_argument("--miner_out",    default="/gpfs/projects/p32908/data/nlp/hf_miner_v3")
+    ap.add_argument("--auditor_out",  default="/gpfs/projects/p32908/data/nlp/hf_auditor_v3")
     ap.add_argument("--auditor_mode", choices=["cot", "no_cot", "both"], default="both")
     args = ap.parse_args()
 

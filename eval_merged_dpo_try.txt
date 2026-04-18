@@ -1,0 +1,192 @@
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+[1/3] loading merged model...
+[model] using /scratch/xla2767/hold2/models/qwen3_8b_thinking_dpo_merged_v1
+[2/3] loading dataset...
+[3/3] running inference...
+
+====================================================================================================
+[CASE 0] ticker=AAPL factor=structural_risks_tech.supply_chain_concentration
+----------------------------------------------------------------------------------------------------
+[USER INPUT]
+Task: Auditor (1.3)
+Ticker: AAPL | Filing: 10-Q | Date: 2023-02-03
+Factor: structural_risks_tech.supply_chain_concentration
+
+[Current Evidence]
+  q_key : Q33::What can you say about geographic concentration of suppliers and mitigation strategies for supply risk?
+  quote : During the first quarter of 2023, COVID-related impacts temporarily affected the Company’s primary iPhone 14 Pro and iPhone 14 Pro Max assembly facility located in Zhengzhou, China.
+  conf  : 0.92
+  q_key : Q33::What can you say about geographic concentration of suppliers and mitigation strategies for supply risk?
+  quote : The Company utilizes several outsourcing partners to manufacture subassemblies for the Company’s products and to perform final assembly and testing of finished products.
+  conf  : 0.85
+  q_key : Q33::What can you say about geographic concentration of suppliers and mitigation strategies for supply risk?
+  quote : Outsourcing partners acquire components and build product based on demand information supplied by the Company, which typically covers periods up to 150 days.
+  conf  : 0.8
+[Historical Context]
+  [2021-04-29 10-Q] The Company also obtains individual components for its products from a wide variety of individual suppliers.  (conf: 0.95)
+  [2021-04-29 10-Q] The Company utilizes several outsourcing partners to manufacture sub-assemblies for the Company’s products and to perform final assembly and testing of finished products.  (conf: 0.75)
+  [2017-11-03 10-K] The Company has made prepayments to certain of its suppliers associated with long-term supply agreements to secure supply of inventory components.  (conf: 0.92)
+
+Output reasoning_chain, sentiment_label, and confidence_score for this factor.
+----------------------------------------------------------------------------------------------------
+[MODEL OUTPUT]
+<think>
+The filing provides multiple, consistent data points that point to a concentrated supply chain risk. The current evidence includes a specific, recent incident (Q1 2023) where a COVID-related disruption temporarily affected the Company’s primary iPhone 14 Pro and iPhone 14 Pro Max assembly facility in Zhengzhou, China. This is a concrete example of geographic concentration and operational vulnerability. The filing also states the Company uses several outsourcing partners to manufacture subassemblies and perform final assembly/testing, and that outsourcing partners acquire components based on demand information covering up to 150 days. These statements indicate reliance on a limited set of partners and a lead-time-driven procurement model, which can amplify supply shocks. Historical filings corroborate the pattern: prior disclosures note reliance on a wide variety of component suppliers but also that the Company uses multiple outsourcing partners and has made prepayments to secure supply under long-term agreements. Taken together, the evidence is consistent and of moderate-to-high quality. The net effect on the structural_risks_tech.supply_chain_concentration factor is negative: the company has a meaningful geographic and partner concentration that increases supply risk, though mitigants (multiple partners, prepayments, and demand-based procurement) are in place. The magnitude is assessed as moderate rather than severe because the company has some diversification and contractual/financial hedges. Therefore the sentiment is negative with a confidence of 0.72.
+</think>
+
+{"sentiment_label": "negative", "confidence_score": 0.72})<|im_end|>
+----------------------------------------------------------------------------------------------------
+[GROUND TRUTH]
+{
+  "reasoning_chain": "Evidence quality and consistency: Current filing provides three directly relevant statements (avg relevance_confidence ~0.857). The strongest is a concrete disruption: COVID-related impacts temporarily affected the Company’s primary iPhone 14 Pro/Max assembly facility in Zhengzhou (relevance_confidence 0.92) — a clear indicator of geographic concentration at the facility level for a flagship product. Complementary current statements note use of several outsourcing partners and a ~150-day demand/planning horizon for subassembly and final assembly procurement (relevance_confidences 0.85 and 0.80), which indicate deliberate mitigation design (outsourcing, multi-partner strategy, advance demand signals). Historical context corroborates both diversification and mitigation actions: prior filings (2021) state components are obtained from a wide variety of suppliers and use of several outsourcing partners (relevance_confidences 0.95 and 0.75); an older disclosure (2017) documents supplier prepayments to secure long-term supply (relevance_confidence 0.92). Together, the corpus is internally consistent: there is concentration risk at specific final-assembly sites (e.g., Zhengzhou) but also documented supplier diversification and operational mitigations over time.\nDirection and magnitude of expected impact: Direction is negative because reliance on a primary assembly facility for high-volume, premium products creates outsized operational and revenue vulnerability when that site is disrupted. Magnitude is moderate rather than severe in the near-to-medium term: a single-site disruption can meaningfully dent supply of flagship models and temporarily pressure revenues/margins, but the firm’s multi-partner outsourcing model, component sourcing breadth, forward planning (~150 days), and historical use of prepayments suggest capacity to reallocate production or smooth shortfalls over weeks-to-months. Therefore expect intermittent, material-but-manageable supply shocks rather than persistent strategic impairment absent systemic events.\nConfidence calibration: Evidence density is moderate (3 current + 3 historical records) with relatively high relevance scores; key limitation is no",
+  "sentiment_label": "negative",
+  "confidence_score": 0.78
+}
+
+====================================================================================================
+[CASE 1] ticker=AAPL factor=structural_risks_tech.supply_chain_concentration
+----------------------------------------------------------------------------------------------------
+[USER INPUT]
+Task: Auditor (1.3)
+Ticker: AAPL | Filing: 10-Q | Date: 2023-05-05
+Factor: structural_risks_tech.supply_chain_concentration
+
+[Current Evidence]
+  q_key : Q33::What can you say about geographic concentration of suppliers and mitigation strategies for supply risk?
+  quote : The Company also obtains individual components for its products from a wide variety of individual suppliers.
+  conf  : 0.88
+  q_key : Q33::What can you say about geographic concentration of suppliers and mitigation strategies for supply risk?
+  quote : The Company utilizes several outsourcing partners to manufacture subassemblies for the Company’s products and to perform final assembly and testing of finished products.
+  conf  : 0.85
+  q_key : Q33::What can you say about geographic concentration of suppliers and mitigation strategies for supply risk?
+  quote : Outsourcing partners acquire components and build product based on demand information supplied by the Company, which typically covers periods up to 150 days.
+  conf  : 0.83
+[Historical Context]
+  [2023-02-03 10-Q] During the first quarter of 2023, COVID-related impacts temporarily affected the Company’s primary iPhone 14 Pro and iPhone 14 Pro Max assembly facility located in Zhengzhou, China.  (conf: 0.92)
+  [2023-02-03 10-Q] The Company utilizes several outsourcing partners to manufacture subassemblies for the Company’s products and to perform final assembly and testing of finished products.  (conf: 0.85)
+  [2023-02-03 10-Q] Outsourcing partners acquire components and build product based on demand information supplied by the Company, which typically covers periods up to 150 days.  (conf: 0.8)
+
+Output reasoning_chain, sentiment_label, and confidence_score for this factor.
+----------------------------------------------------------------------------------------------------
+[MODEL OUTPUT]
+<think>
+The filing provides multiple, consistent statements that mitigate supply-chain concentration risk. The company states it obtains components from a wide variety of suppliers and uses several outsourcing partners for subassemblies and final assembly. It also discloses that outsourcing partners acquire components based on demand information covering up to 150 days, which supports demand-driven, flexible sourcing. Historical context reinforces this: the company previously experienced a COVID-related disruption at a single iPhone assembly facility, but the filing’s language points to a diversified, multi-partner supply chain that reduces single-point concentration. Taken together, the evidence points to a positive assessment of the company’s supply-chain concentration risk — the mitigations are specific and consistent, but the evidence is not exhaustive (no explicit geographic diversification or supplier concentration metrics are provided). Therefore the sentiment is positive with a calibrated confidence reflecting consistent but not complete disclosure.
+</think>
+
+{"sentiment_label": "positive", "confidence_score": 0.76})<|im_end|>
+----------------------------------------------------------------------------------------------------
+[GROUND TRUTH]
+{
+  "reasoning_chain": "1) Evidence summary and quality: Current filing quotes indicate the company \"obtains individual components from a wide variety of suppliers\" and \"utilizes several outsourcing partners\" for subassemblies and final assembly; outsourcing partners build to demand forecasts covering up to ~150 days. Relevance confidences on these items are high (avg ~0.85). Historical context adds a high-confidence (0.92) fact that COVID-related impacts temporarily affected the company’s primary iPhone assembly facility in Zhengzhou, China in Q1 2023.\n\n2) Consistency and gaps: Statements are internally consistent (diversified supplier base + reliance on outsourcing). However the current evidence is high-level and lacks geographic specificity of the supplier base; the historical Zhengzhou disruption exposes a material geographic concentration in final assembly despite claims of supplier breadth.\n\n3) Direction and magnitude of impact: Mitigating factors (wide variety of component suppliers, multiple outsourcing partners) lower component-level concentration risk, suggesting limited positive effect on supplier concentration. Offsetting this, reliance on specific assembly hubs (documented Zhengzhou outage) and build-to-forecast windows (~150 days) imply exposure to geographic/operational disruption and to forecast/lead-time risks. Net effect: negative — a moderate operational risk to production continuity and potentially to near-term supply of finished products.\n\n4) Confidence calibration: Evidence density is moderate — multiple corroborating statements plus a high-confidence historical disruption. Primary limitations are lack of explicit geographic dispersion metrics and absence of recent mitigation detail (e.g., multi-hub diversification or redundancy plans). Given available evidence, confidence in a \"moderate negative\" assessment is above average.\n\nConclusion: The filings and history point to a net negative sentiment on \"supply_chain_concentration\" driven by demonstrated geographic concentration in final assembly despite some diversification of component suppliers. The expected magnitude is moderate (operational/production risk), with moderate-high confidence.",
+  "sentiment_label": "negative",
+  "confidence_score": 0.78
+}
+
+====================================================================================================
+[CASE 2] ticker=AAPL factor=structural_risks_tech.supply_chain_concentration
+----------------------------------------------------------------------------------------------------
+[USER INPUT]
+Task: Auditor (1.3)
+Ticker: AAPL | Filing: 10-Q | Date: 2023-08-04
+Factor: structural_risks_tech.supply_chain_concentration
+
+[Current Evidence]
+  q_key : Q33::What can you say about geographic concentration of suppliers and mitigation strategies for supply risk?
+  quote : The Company utilizes several outsourcing partners to manufacture subassemblies for the Company’s products and to perform final assembly and testing of finished products.
+  conf  : 0.9
+  q_key : Q33::What can you say about geographic concentration of suppliers and mitigation strategies for supply risk?
+  quote : Outsourcing partners acquire components and build product based on demand information supplied by the Company, which typically covers periods up to 150 days.
+  conf  : 0.9
+  q_key : Q33::What can you say about geographic concentration of suppliers and mitigation strategies for supply risk?
+  quote : The Company also obtains individual components for its products from a wide variety of individual suppliers.
+  conf  : 0.9
+[Historical Context]
+  [2023-05-05 10-Q] The Company also obtains individual components for its products from a wide variety of individual suppliers.  (conf: 0.88)
+  [2023-05-05 10-Q] The Company utilizes several outsourcing partners to manufacture subassemblies for the Company’s products and to perform final assembly and testing of finished products.  (conf: 0.85)
+  [2023-05-05 10-Q] Outsourcing partners acquire components and build product based on demand information supplied by the Company, which typically covers periods up to 150 days.  (conf: 0.83)
+
+Output reasoning_chain, sentiment_label, and confidence_score for this factor.
+----------------------------------------------------------------------------------------------------
+[MODEL OUTPUT]
+<think>
+The filing provides consistent, high-quality evidence that Apple mitigates supply-chain concentration through multiple mechanisms. The company explicitly states it uses several outsourcing partners for subassemblies and final assembly, and that outsourcing partners acquire components based on demand information covering up to 150 days. It also notes that individual components are sourced from a wide variety of suppliers. These points are corroborated by the historical 10-Q (same language), indicating a stable, repeatable mitigation strategy. The evidence is consistent and of high relevance but is limited in scope (no geographic breakdown of suppliers or specific contingency measures). Taken together, the net assessment is that the company has a positive, mitigating posture on supply-chain concentration risk, but not a very strong one because the filing does not provide granular geographic detail or explicit contingency plans. Therefore the sentiment is positive with a calibrated confidence reflecting consistency but limited granularity.
+</think>
+
+{"sentiment_label": "positive", "confidence_score": 0.74}]<|im_end|>
+----------------------------------------------------------------------------------------------------
+[GROUND TRUTH]
+{
+  "reasoning_chain": "Evidence quality and consistency: The current 10‑Q provides three consistent, high‑relevance statements: (1) the Company uses several outsourcing partners for subassembly and final assembly; (2) those partners acquire components and build to demand signals the Company supplies (typically up to 150 days); and (3) the Company obtains components from a wide variety of individual suppliers. Historical context shows the same language repeated in the prior 10‑Q (May 2023). Relevance confidences are high (~0.83–0.9), indicating consistent but generic disclosure.\\n\\nDirection and magnitude of expected impact: The disclosures point to mitigation factors — multiple outsourcing partners and a wide supplier base reduce the likelihood of extreme supplier concentration and single‑point failures, while 150‑day demand visibility suggests operational coordination with contract manufacturers. However, the filings do not disclose geographic distribution of suppliers, reliance on any single critical supplier or component, contingency sourcing strategies, inventory/dual‑sourcing practices, or metrics on supplier concentration. That limits the magnitude of positive impact that can be inferred. Overall, the net signal is modestly mitigating but not strongly reassuring.\\n\\nConfidence calibration based on evidence density: Evidence density is moderate (three corroborating current facts plus historical repetition) and internally consistent, supporting a coherent but high‑level view. Because the disclosures lack granularity on geographic concentration and contingency measures, confidence in a definitive judgment is limited.\\n\\nSummary judgment: neutral — disclosures indicate some mitigation through diversified suppliers and outsourcing partners but are too generic to conclude a materially positive reduction in geographic supply‑chain concentration risk.",
+  "sentiment_label": "neutral",
+  "confidence_score": 0.6
+}
+
+====================================================================================================
+[CASE 3] ticker=ACN factor=competitive_dynamics_and_substitution.price_competition_discounting
+----------------------------------------------------------------------------------------------------
+[USER INPUT]
+Task: Auditor (1.3)
+Ticker: ACN | Filing: 10-K | Date: 2023-10-12
+Factor: competitive_dynamics_and_substitution.price_competition_discounting
+
+[Current Evidence]
+  q_key : Q42::How does the filing describe competitive pricing pressure, discounting, and changes in deal terms?
+  quote : The business environment is competitive, and we are experiencing lower pricing across the business.
+  conf  : 0.95
+[Historical Context]
+  [2021-10-15 10-K] The business environment remained competitive. In many areas, our pricing, which we define as the contract profitability or margin on the work that we sell, was lower.  (conf: 0.92)
+  [2018-10-24 10-K] While the business environment remained competitive, pricing was relatively stable.  (conf: 0.8)
+  [2017-10-26 10-K] While the business environment remained competitive, pricing was relatively stable.  (conf: 0.85)
+
+Output reasoning_chain, sentiment_label, and confidence_score for this factor.
+----------------------------------------------------------------------------------------------------
+[MODEL OUTPUT]
+<think>
+The 2023 filing explicitly states the business environment is competitive and that the company is experiencing lower pricing across the business. This is a direct, high-quality current data point (relevance 0.95). Historical filings show a consistent pattern: 2021 also reported lower pricing, while 2018 and 2017 noted relatively stable pricing. The 2023 statement is a clear upgrade from the 2018/2017 stable pricing to a more negative pricing environment. Taken together, the evidence points to a persistent and intensifying competitive pricing pressure and discounting. The directional change is negative for the factor (increased price competition and discounting). The magnitude is assessed as moderate: the company is experiencing lower pricing, but the filing does not indicate a severe or accelerating collapse in pricing. Given the consistency across filings and the high relevance of the current quote, the sentiment is negative with a confidence of 0.72.
+</think>
+
+{"sentiment_label": "negative", "confidence_score": 0.72})<|im_end|>
+----------------------------------------------------------------------------------------------------
+[GROUND TRUTH]
+{
+  "reasoning_chain": "Current filing: a direct statement that \"The business environment is competitive, and we are experiencing lower pricing across the business.\" (relevance_confidence 0.95) — clear directional signal of downward pricing pressure across product/service lines but without quantification of magnitude or affected segments. Historical context: 2021 filing contains a highly similar statement that pricing (contract profitability/margin) \"was lower\" (relevance_confidence 0.92), indicating this is not a one-off observation and that pricing pressure persisted or re-emerged. Earlier filings (2017, 2018) described pricing as \"relatively stable,\" suggesting a deterioration in pricing dynamics beginning after 2018 and evident in 2021 and 2023. Evidence quality and consistency: the current and 2021 statements are high-confidence, consistent qualitative disclosures; lack of numeric metrics limits precision. Direction and magnitude of expected impact: direction is negative (lower pricing across the business); magnitude is likely moderate — broad-based but unspecified — so risk to margins/revenue exists but cannot be scored as severe absent quantification or offsetting drivers. Confidence calibration: two independent, recent filings directly support pricing deterioration (weights: current 0.95, 2021 0.92); earlier stable years reduce the likelihood of structural long-term decline but do not contradict recent trend. Overall assessment: negative sentiment on pricing dynamics with moderate-to-high confidence, tempered by lack of quantified impact and potential offsetting factors (mix, productivity, price increases elsewhere).",
+  "sentiment_label": "negative",
+  "confidence_score": 0.82
+}
+
+====================================================================================================
+[CASE 4] ticker=ACN factor=m_and_a_and_corpdev.divestiture_focus
+----------------------------------------------------------------------------------------------------
+[USER INPUT]
+Task: Auditor (1.3)
+Ticker: ACN | Filing: 10-K | Date: 2023-10-12
+Factor: m_and_a_and_corpdev.divestiture_focus
+
+[Current Evidence]
+  q_key : Q28::How does the filing describe divestitures or portfolio pruning as part of strategic refocusing?
+  quote : Investing activities: The $1,638 million decrease in cash used was primarily due to lower spending on business acquisitions and higher proceeds from the sale of businesses and investments.
+  conf  : 0.9
+[Historical Context]
+  [2022-10-12 10-K] Loss on Disposition of Russia Business
+
+We recorded a loss from the disposal of our business in Russia of $96 million during fiscal 2022.  (conf: 0.92)
+  [2022-10-12 10-K] During fiscal 2022, we disposed of our business in Russia and recorded a non-operating loss of $96 million.  (conf: 0.9)
+  [2018-10-24 10-K] We recorded a gain from the Navitaire divestiture of $548 million and a gain from the Duck Creek partial divestiture of $301 million during fiscal 2016.  (conf: 0.92)
+
+Output reasoning_chain, sentiment_label, and confidence_score for this factor.
+----------------------------------------------------------------------------------------------------
+[MODEL OUTPUT]
+<think>
+The 2023 10-K explicitly states that the $1,638 million decrease in cash used was primarily due to lower spending on business acquisitions and higher proceeds from the sale of businesses and investments. This is a direct, high-quality data point indicating active divestiture activity and portfolio pruning. Historical filings provide consistent corroboration: prior years show both realized gains (Navitaire, Duck Creek) and a non-operating loss from a Russia divestiture, demonstrating that the company has executed both profitable and less profitable disposals. Taken together, the evidence points to a positive strategic signal for divestiture focus — the company is actively pruning its portfolio and generating proceeds, which supports strategic refocusing. The evidence is consistent across filings but is not exhaustive (no detailed breakdown of divestiture targets or strategic rationale), so the assessment is not extremely strong. Overall sentiment: positive.
+</think>
+
+{"sentiment_label": "positive", "confidence_score": 0.76})<|im_end|>
+----------------------------------------------------------------------------------------------------
+[GROUND TRUTH]
+{
+  "reasoning_chain": "Current filing evidence: cash used in investing activities decreased by $1,638 million \"primarily due to lower spending on business acquisitions and higher proceeds from the sale of businesses and investments.\" This directly indicates realized divestitures and reduced acquisitive activity in the period. Evidence quality and consistency: single high-relevance line (relevance_confidence 0.9) is explicit on cash flow effects but lacks granularity (no amounts attributed solely to divestitures, no named assets, no explicit strategic rationale). Historical context: prior disposals include the 2022 Russia business disposal (non-operating loss $96m) and earlier profitable divestitures (Navitaire, Duck Creek) — demonstrating a pattern of intermittent portfolio pruning with mixed P&L outcomes. Direction and magnitude of impact: directionally positive for liquidity and evidence of active portfolio pruning (proceeds offset acquisition outlays), with an aggregate $1.638bn change in cash used as the observable magnitude driver; however the specific contribution from divestitures vs. lower acquisition spend is indistinguishable in the disclosure. Confidence calibration: evidence density is low (one current quantitative statement + a few historical facts), so while the signal that divestitures occurred and materially affected cash flows is clear, attribution and strategic intent remain uncertain. Conclusion (sentiment): positive — the filing indicates realized divestitures generating proceeds and a pullback in acquisition spend, consistent with portfolio refocusing, but with moderate confidence due to limited detail and mixed historical outcomes.",
+  "sentiment_label": "positive",
+  "confidence_score": 0.75
+}
+

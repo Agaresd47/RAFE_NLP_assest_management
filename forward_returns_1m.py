@@ -11,6 +11,14 @@ import pandas as pd
 DEFAULT_TRADING_DAYS_1M = 21
 
 
+def _resolve_price_file(raw_dir: Path, candidates: list[str]) -> Path:
+    for name in candidates:
+        path = raw_dir / name
+        if path.exists():
+            return path
+    raise FileNotFoundError(f"None of the expected price files exist under {raw_dir}: {candidates}")
+
+
 def mean_ret_excess_by_sentiment(
     df: pd.DataFrame,
     group_col: str,
@@ -34,7 +42,10 @@ def mean_ret_excess_by_sentiment(
 def load_adj_close_panel(raw_dir: Path) -> pd.DataFrame:
     """Concat daily equity + SPY CSVs under data/raw/."""
     parts = [
-        pd.read_csv(raw_dir / "daily_prices_2010_2014.csv", parse_dates=["Date"]),
+        pd.read_csv(
+            _resolve_price_file(raw_dir, ["daily_prices_2010_2014.csv", "daily_prices_2010_2014 (1).csv"]),
+            parse_dates=["Date"],
+        ),
         pd.read_csv(raw_dir / "daily_prices_2015_2026.csv", parse_dates=["Date"]),
         pd.read_csv(raw_dir / "spy_daily_2010_2026.csv", parse_dates=["Date"]),
     ]
@@ -91,6 +102,22 @@ def attach_21d_return_and_excess(
     prices = load_adj_close_panel(raw_dir)
     spy_rows = prices[prices["Ticker"] == "SPY"][["Date", "Adj Close"]].copy()
     by_ticker: Dict[str, pd.DataFrame] = {t: g for t, g in prices.groupby("Ticker")}
+
+    if date_col not in df.columns:
+        for fallback in ("report_date", "parsed_report_date"):
+            if fallback in df.columns:
+                date_col = fallback
+                break
+        else:
+            raise KeyError(f"None of the expected date columns exist: {date_col}, report_date, parsed_report_date")
+
+    if ticker_col not in df.columns:
+        for fallback in ("ticker", "Ticker"):
+            if fallback in df.columns:
+                ticker_col = fallback
+                break
+        else:
+            raise KeyError(f"None of the expected ticker columns exist: {ticker_col}, ticker, Ticker")
 
     rets: list[float] = []
     excess: list[float] = []
