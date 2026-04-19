@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import unsloth
 import argparse
+import json
 import logging
 import math
+import re
 import warnings
+from pathlib import Path
 from typing import Any
 
 import datasets
@@ -50,12 +53,12 @@ logging.Logger.warning = _patched_logger_warning
 
 MODEL_PATH = "Qwen/Qwen3-8B"
 DATASET_PATH = "/scratch/xla2767/hold2/data/nlp/hf_cot_dpo"
-DPO_ADAPTER_PATH = "/scratch/xla2767/hold2/models/cot_dpo_adapter"
-OUTPUT_DIR = "/scratch/xla2767/hold2/models/cot_grpo_adapter"
+DPO_ADAPTER_PATH = "/scratch/xla2767/hold2/models/cot_dpo_adapter_v2"
+OUTPUT_DIR = "/scratch/xla2767/hold2/models/cot_grpo_adapter_v2"
 
-MAX_SEQ_LEN = 4096
+MAX_SEQ_LEN = 5200
 MAX_PROMPT_LENGTH = 3072
-MAX_COMPLETION_LENGTH = 512
+MAX_COMPLETION_LENGTH = 768
 NUM_EPOCHS = 1.0
 LEARNING_RATE = 5e-6
 SAVE_STEPS = 10
@@ -65,12 +68,13 @@ GRADIENT_ACCUMULATION_STEPS = 6
 NUM_GENERATIONS = 2
 TEMPERATURE = 0.8
 TOP_P = 0.9
-LOGGING_STEPS = 10
+LOGGING_STEPS = 1
 WARMUP_STEPS = 20
 WEIGHT_DECAY = 0.0
 BETA = 0.02
 CONFIDENCE_REWARD_WEIGHT = 0.6
 RETURN_REWARD_WEIGHT = 0.4
+MISSING_JSON_PENALTY = 0.6
 
 TARGET_MODULES = [
     "q_proj",
@@ -81,6 +85,9 @@ TARGET_MODULES = [
     "up_proj",
     "down_proj",
 ]
+
+TOKENISH_RE = re.compile(r"\w+|[^\w\s]", re.UNICODE)
+THINK_BLOCK_RE = re.compile(r"^\s*<think>\s*(?P<reasoning>.*?)\s*</think>\s*(?P<tail>.*)$", re.DOTALL)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -166,6 +173,44 @@ def _resolve_generation_batch_size(
     return global_train_batch
 
 
+def _sync_trainer_state_config(resume_path: str | None, args) -> None:
+    if not resume_path:
+        return
+
+    trainer_state_path = Path(resume_path) / "trainer_state.json"
+    if not trainer_state_path.exists():
+        return
+
+    try:
+        original_text = trainer_state_path.read_text()
+        trainer_state = json.loads(original_text)
+    except Exception as exc:
+        print(f"[resume] failed to read trainer_state.json: {exc}", flush=True)
+        return
+
+    updates = {
+        "logging_steps": args.logging_steps,
+        "save_steps": args.save_steps,
+    }
+    changed = {}
+    for key, value in updates.items():
+        old_value = trainer_state.get(key)
+        if old_value != value:
+            trainer_state[key] = value
+            changed[key] = {"old": old_value, "new": value}
+
+    if not changed:
+        print("[resume] trainer_state.json already matches current logging/save steps", flush=True)
+        return
+
+    backup_path = trainer_state_path.with_name("trainer_state.json.codex.bak")
+    if not backup_path.exists():
+        backup_path.write_text(original_text)
+
+    trainer_state_path.write_text(json.dumps(trainer_state, ensure_ascii=False, indent=2))
+    print(f"[resume] patched trainer_state.json with current args: {changed}", flush=True)
+
+
 def _label_sign(label: str | None) -> int:
     label = normalize_label(label)
     if label in {"positive", "very_positive"}:
@@ -229,6 +274,39 @@ def _normalize_grpo_dataset(dataset: Dataset, *, num_proc: int) -> Dataset:
     return cleaned
 
 
+def _approx_completion_tokens(text: str) -> int:
+    return len(TOKENISH_RE.findall(str(text)))
+
+
+def _extract_final_json(completion: str) -> dict[str, Any] | None:
+    clean = str(completion).strip().replace("<tool_call>", "").replace("</tool_call>", "")
+    clean = clean.replace("<|im_end|>", "").strip()
+    think_match = THINK_BLOCK_RE.match(clean)
+    if think_match:
+        clean = str(think_match.group("tail") or "").strip()
+    if not clean or not clean.endswith("}"):
+        return None
+    try:
+        parsed = json.loads(clean)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(parsed, dict):
+        return None
+    return parsed
+
+
+def _structure_penalty(completion: str) -> tuple[float, dict[str, Any], int]:
+    approx_tokens = _approx_completion_tokens(completion)
+    final_json = _extract_final_json(completion)
+    parsed = parse_completion_json(completion) if final_json is not None else None
+
+    penalty = 0.0
+    if final_json is None:
+        penalty += MISSING_JSON_PENALTY
+
+    return penalty, (parsed or final_json or {}), approx_tokens
+
+
 def _return_reward_func(
     prompts,
     completions,
@@ -239,9 +317,9 @@ def _return_reward_func(
 ):
     rewards: list[float] = []
     for idx, completion in enumerate(completions):
-        parsed = parse_completion_json(completion)
+        structure_penalty, parsed, _ = _structure_penalty(completion)
         if not parsed:
-            rewards.append(-1.0)
+            rewards.append(_clamp(-structure_penalty))
             continue
 
         target = normalize_label(return_label[idx])
@@ -273,6 +351,7 @@ def _return_reward_func(
         if candidate == "neutral" and target != "neutral":
             reward -= 0.10 + 0.10 * strength
 
+        reward -= structure_penalty
         rewards.append(_clamp(reward))
     return rewards
 
@@ -287,9 +366,9 @@ def _confidence_reward_func(
 ):
     rewards: list[float] = []
     for idx, completion in enumerate(completions):
-        parsed = parse_completion_json(completion)
+        structure_penalty, parsed, _ = _structure_penalty(completion)
         if not parsed:
-            rewards.append(-1.0)
+            rewards.append(_clamp(-structure_penalty))
             continue
 
         target = normalize_label(return_label[idx])
@@ -335,11 +414,13 @@ def _confidence_reward_func(
             reward -= max(0.0, confidence - 0.55) * 0.20
 
         reward += 0.10 * (dist_score - 0.5)
+        reward -= structure_penalty
         rewards.append(_clamp(reward))
     return rewards
 
 
 def _reward_breakdown(example: dict[str, Any], completion: str) -> dict[str, Any]:
+    structure_penalty, parsed, approx_tokens = _structure_penalty(completion)
     confidence_reward = _confidence_reward_func(
         prompts=[example["prompt"]],
         completions=[completion],
@@ -355,11 +436,13 @@ def _reward_breakdown(example: dict[str, Any], completion: str) -> dict[str, Any
         ret_1m=[example.get("ret_1m")],
     )[0]
     total = _clamp(0.6 * confidence_reward + 0.4 * return_reward)
-    parsed = parse_completion_json(completion)
     return {
         "confidence_reward": round(confidence_reward, 4),
         "return_reward": round(return_reward, 4),
         "total_reward": round(total, 4),
+        "structure_penalty": round(structure_penalty, 4),
+        "approx_completion_tokens": approx_tokens,
+        "has_final_json": bool(_extract_final_json(completion)),
         "parsed_label": normalize_label(parsed.get("sentiment_label") if parsed else None),
         "parsed_confidence": round(coerce_confidence(parsed.get("confidence_score")), 4) if parsed else None,
     }
@@ -375,6 +458,7 @@ def main() -> None:
     print(f"[GPU] {gpu_name}", flush=True)
     ensure_dir(args.output_dir)
     resume_path = find_latest_checkpoint(args.output_dir)
+    _sync_trainer_state_config(resume_path, args)
 
     print("[1/4] Loading policy model...", flush=True)
     model, tokenizer = load_unsloth_model(
@@ -498,6 +582,7 @@ def main() -> None:
         train_dataset=train_ds,
         processing_class=tokenizer,
     )
+    trainer.create_model_card = lambda *args, **kwargs: None
     trainer.train(resume_from_checkpoint=resume_path)
     trainer.model.save_pretrained(args.output_dir, safe_serialization=True)
     tokenizer.save_pretrained(args.output_dir)

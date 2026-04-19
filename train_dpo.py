@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import unsloth
 import argparse
 import logging
 import warnings
@@ -48,19 +49,19 @@ logging.Logger.warning = _patched_logger_warning
 MAX_SEQ_LEN_DEFAULT = 4096
 MAX_PROMPT_LEN_DEFAULT = 4096
 DEFAULT_MODEL_PATH = "Qwen/Qwen3-8B"
-DEFAULT_DATASET_PATH = "/scratch/xla2767/hold2/data/nlp/hf_cot_dpo"
-DEFAULT_OUTPUT_DIR = "/scratch/xla2767/hold2/models/cot_dpo_adapter"
-DEFAULT_SFT_ADAPTER_PATH = "/scratch/xla2767/hold2/data/nlp/qwen3_8b_thinking_sft_out"
-NUM_EPOCHS = 3.0
-LEARNING_RATE = 2e-5
-SAVE_STEPS = 10
+DEFAULT_DATASET_PATH = "/scratch/xla2767/hold2/data/nlp/hf_cot_dpo_v3"
+DEFAULT_OUTPUT_DIR = "/scratch/xla2767/hold2/models/cot_grpo_adapter_v2"
+DEFAULT_SFT_ADAPTER_PATH = "/scratch/xla2767/hold2/models/cot_dpo_adapter_v2"
+NUM_EPOCHS = 1.0
+LEARNING_RATE = 13e-6
+SAVE_STEPS = 100
 PER_DEVICE_TRAIN_BATCH_SIZE = 4
 PER_DEVICE_EVAL_BATCH_SIZE = 4
 GRADIENT_ACCUMULATION_STEPS = 6
 WARMUP_STEPS = 20
 WEIGHT_DECAY = 0.0
 LOGGING_STEPS = 5
-EVAL_STEPS = 10
+EVAL_STEPS = 100
 SAVE_TOTAL_LIMIT = 5
 TARGET_MODULES = [
     "q_proj",

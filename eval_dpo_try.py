@@ -17,7 +17,7 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("transformers.modeling_attn_mask_utils").setLevel(logging.ERROR)
 
 BASE_MODEL = "Qwen/Qwen3-8B"
-ADAPTER_PATH = "/scratch/xla2767/hold2/models/cot_dpo_adapter"
+ADAPTER_PATH = "/scratch/xla2767/hold2/models/cot_grpo_adapter_v2"
 DATA_DIR = "/scratch/xla2767/hold2/data/nlp/hf_cot_sft"
 MAX_SEQ_LEN = 8192
 NUM_SAMPLES = 5

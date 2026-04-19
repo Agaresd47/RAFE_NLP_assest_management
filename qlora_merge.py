@@ -31,9 +31,9 @@ def _patched_logger_warning(self, msg, *args, **kwargs):
 logging.Logger.warning = _patched_logger_warning
 
 
-DEFAULT_BASE_MODEL = "/projects/p32908/hf_cache/hub/models--Qwen--Qwen3-4B-Instruct-2507"
-DEFAULT_ADAPTER_PATH = "/scratch/xla2767/models/nlp_combined_new/checkpoint-65/adapter_model.safetensors"
-DEFAULT_MERGED_OUTPUT = "/scratch/xla2767/models/try_delete_latter3"
+DEFAULT_BASE_MODEL = "Qwen/Qwen3-8B"
+DEFAULT_ADAPTER_PATH = "/scratch/xla2767/hold2/models/cot_grpo_adapter_v2"
+DEFAULT_MERGED_OUTPUT = "/scratch/xla2767/hold2/models/qwen3_8b_thinking_grpo_merged_v1"
 
 
 def build_parser():
