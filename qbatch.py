@@ -144,20 +144,42 @@ def wait_for_server(sglang_url):
     raise RuntimeError("sglang server startup timed out")
 
 
-async def infer_single(session, sglang_url, msgs, max_new_tokens, enable_thinking=True):
+async def infer_single(
+    session,
+    sglang_url,
+    msgs,
+    max_new_tokens,
+    enable_thinking=True,
+    repetition_penalty=None,
+):
     async with session.post(
         f"{sglang_url}/v1/chat/completions",
-        json={
-            "model": "default",
-            "messages": msgs,
-            "max_tokens": max_new_tokens,
-            "temperature": 0.1,
-            "top_p": 0.9,
-            "extra_body": {
-                "chat_template_kwargs": {"enable_thinking": enable_thinking},
-                "separate_reasoning": False,
-            },
-        },
+        json=(
+            {
+                "model": "default",
+                "messages": msgs,
+                "max_tokens": max_new_tokens,
+                "temperature": 0.1,
+                "top_p": 0.9,
+                "extra_body": {
+                    "chat_template_kwargs": {"enable_thinking": enable_thinking},
+                    "separate_reasoning": False,
+                },
+            }
+            if repetition_penalty is None
+            else {
+                "model": "default",
+                "messages": msgs,
+                "max_tokens": max_new_tokens,
+                "temperature": 0.1,
+                "top_p": 0.9,
+                "repetition_penalty": repetition_penalty,
+                "extra_body": {
+                    "chat_template_kwargs": {"enable_thinking": enable_thinking},
+                    "separate_reasoning": False,
+                },
+            }
+        ),
     ) as resp:
         data = await resp.json()
         choices = data.get("choices") or []
@@ -167,22 +189,36 @@ async def infer_single(session, sglang_url, msgs, max_new_tokens, enable_thinkin
         return {"content": message.get("content"), "response": data}
 
 
-async def infer_batch_async(sglang_url, batch_messages, max_new_tokens=512, enable_thinking=True):
+async def infer_batch_async(
+    sglang_url,
+    batch_messages,
+    max_new_tokens=512,
+    enable_thinking=True,
+    repetition_penalty=None,
+):
     async with aiohttp.ClientSession() as session:
         tasks = [
-            infer_single(session, sglang_url, msgs, max_new_tokens, enable_thinking=enable_thinking)
+            infer_single(
+                session,
+                sglang_url,
+                msgs,
+                max_new_tokens,
+                enable_thinking=enable_thinking,
+                repetition_penalty=repetition_penalty,
+            )
             for msgs in batch_messages
         ]
         return await asyncio.gather(*tasks)
 
 
-def infer_batch(sglang_url, batch_messages, max_new_tokens=512, enable_thinking=True):
+def infer_batch(sglang_url, batch_messages, max_new_tokens=512, enable_thinking=True, repetition_penalty=None):
     return asyncio.run(
         infer_batch_async(
             sglang_url,
             batch_messages,
             max_new_tokens=max_new_tokens,
             enable_thinking=enable_thinking,
+            repetition_penalty=repetition_penalty,
         )
     )
 
@@ -190,24 +226,33 @@ def infer_batch(sglang_url, batch_messages, max_new_tokens=512, enable_thinking=
 def parse_output(raw):
     if raw is None:
         return {}
-    clean = (
-        str(raw)
-        .replace("<tool_call>", "")
-        .replace("</tool_call>", "")
-        .replace("<|im_end|>", "")
-        .strip()
-    )
+    clean = str(raw)
+    clean = clean.replace("<tool_call>", "").replace("</tool_call>", "")
+    clean = clean.replace("<|im_end|>", "").strip()
+    clean = re.sub(r"<think>\s*.*?\s*</think>", "", clean, flags=re.DOTALL | re.IGNORECASE).strip()
     try:
         parsed = json.loads(clean)
         return parsed if isinstance(parsed, dict) else {}
     except Exception:
-        matches = list(re.finditer(r"\{.*?\}", clean, re.DOTALL))
-        for match in reversed(matches):
-            try:
-                parsed = json.loads(match.group())
-                return parsed if isinstance(parsed, dict) else {}
-            except Exception:
-                continue
+        pass
+
+    start = clean.find("{")
+    end = clean.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        chunk = clean[start : end + 1]
+        try:
+            parsed = json.loads(chunk)
+            return parsed if isinstance(parsed, dict) else {}
+        except Exception:
+            pass
+
+    matches = list(re.finditer(r"\{.*?\}", clean, re.DOTALL))
+    for match in reversed(matches):
+        try:
+            parsed = json.loads(match.group())
+            return parsed if isinstance(parsed, dict) else {}
+        except Exception:
+            continue
     return {}
 
 
@@ -355,7 +400,13 @@ def main():
                 [{"role": "system", "content": SYSTEM_MINER}, {"role": "user", "content": item[3]}]
                 for item in batch
             ]
-            outputs = infer_batch(args.sglang_url, msgs, max_new_tokens=2048, enable_thinking=False)
+            outputs = infer_batch(
+                args.sglang_url,
+                msgs,
+                max_new_tokens=768,
+                enable_thinking=False,
+                repetition_penalty=1.02,
+            )
 
             for (ticker, form, date, user_prompt), out in zip(batch, outputs):
                 content, response = get_content_and_response(out)
@@ -431,7 +482,13 @@ def main():
                 [{"role": "system", "content": SYSTEM_MINER}, {"role": "user", "content": x["messages"][1]["content"]}]
                 for x in batch
             ]
-            outputs = infer_batch(args.sglang_url, msgs, max_new_tokens=2048, enable_thinking=False)
+            outputs = infer_batch(
+                args.sglang_url,
+                msgs,
+                max_new_tokens=768,
+                enable_thinking=False,
+                repetition_penalty=1.02,
+            )
 
             for x, out in zip(batch, outputs):
                 content, response = get_content_and_response(out)
