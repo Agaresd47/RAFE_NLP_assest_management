@@ -216,6 +216,33 @@
 
 不要再默认要求模型一次性学完整 schema 输出。
 
+## 关于 `sglang` 的现实判断
+
+当前这条 extract 线还额外验证出一个工程判断：
+
+- `sglang` 不是“模型扔进去就不用管”的黑盒组件。
+
+尤其对 `task1.2 / Miner / extract` 这种任务，更要谨慎：
+
+- prompt 很长
+- 输出是嵌套 JSON
+- `original_quote` 也可能很长
+- 任务本质更像“长上下文定位 + 原句复制”
+
+这类任务比 `task1.3 / Auditor` 或 `DPO` 风格输出更容易暴露服务端链路问题，例如：
+
+- tokenizer / chat template patch 的兼容性分叉
+- decode 参数过松导致 repetition / “吐泡泡”
+- JSON 提取逻辑对长输出不够稳
+- server 端实际挂载模型与调用侧假设不一致
+
+所以当前更务实的结论是：
+
+- `Auditor / DPO` 可以继续优先使用 `sglang`
+- `Miner / extract` 如果目标是稳定产出，优先使用本地 `unsloth + adapter` 的离线全量推理
+
+不要把 `sglang` 默认当成“接上就稳定”的基础设施。
+
 当前这个脚本还支持两种 raw filing 入口：
 
 1. 直接传 `--raw-file`
