@@ -9,7 +9,7 @@ from pathlib import Path
 
 import torch
 from datasets import load_from_disk
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer
 from unsloth import FastLanguageModel
 
 from train_common import load_lora_adapter_weights, load_unsloth_model, resolve_latest_adapter_path
@@ -43,7 +43,6 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base_model", default=BASE_MODEL)
     parser.add_argument("--adapter_path", default=ADAPTER_PATH)
-    parser.add_argument("--merged_model", default="")
     parser.add_argument("--data_dir", default=DATA_DIR)
     parser.add_argument("--output_dir", default=OUTPUT_DIR)
     parser.add_argument("--split", default=SPLIT)
@@ -198,41 +197,25 @@ def main() -> None:
     ensure_dir(out_dir)
 
     print("[1/4] loading model...", flush=True)
-    if args.merged_model:
-        model_path = resolve_model_path(args.merged_model)
-        model = AutoModelForCausalLM.from_pretrained(
-            model_path,
-            torch_dtype=torch.bfloat16,
-            device_map="auto",
-            trust_remote_code=True,
-        )
-        model.eval()
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_path,
-            trust_remote_code=True,
-            use_fast=False,
-        )
-        print(f"[model] using merged={model_path}", flush=True)
-    else:
-        model, _ = load_unsloth_model(
-            model_name=args.base_model,
-            max_seq_length=args.max_seq_len,
-            lora_r=16,
-            lora_alpha=16,
-            target_modules=TARGET_MODULES,
-        )
-        adapter_path = resolve_latest_adapter_path(args.adapter_path)
-        if not adapter_path:
-            raise FileNotFoundError(f"No adapter checkpoint found under: {args.adapter_path}")
-        loaded = load_lora_adapter_weights(model, adapter_path)
-        print(f"[adapter] loaded={loaded} path={adapter_path}", flush=True)
-        FastLanguageModel.for_inference(model)
-        tokenizer = AutoTokenizer.from_pretrained(
-            args.base_model,
-            trust_remote_code=True,
-            use_fast=False,
-        )
-        print(f"[model] using base={args.base_model}", flush=True)
+    model, _ = load_unsloth_model(
+        model_name=args.base_model,
+        max_seq_length=args.max_seq_len,
+        lora_r=16,
+        lora_alpha=16,
+        target_modules=TARGET_MODULES,
+    )
+    adapter_path = resolve_latest_adapter_path(args.adapter_path)
+    if not adapter_path:
+        raise FileNotFoundError(f"No adapter checkpoint found under: {args.adapter_path}")
+    loaded = load_lora_adapter_weights(model, adapter_path)
+    print(f"[adapter] loaded={loaded} path={adapter_path}", flush=True)
+    FastLanguageModel.for_inference(model)
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.base_model,
+        trust_remote_code=True,
+        use_fast=False,
+    )
+    print(f"[model] using base={args.base_model}", flush=True)
 
     tokenizer.padding_side = "left"
     vocab = tokenizer.get_vocab()
