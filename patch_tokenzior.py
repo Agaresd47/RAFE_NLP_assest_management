@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-p = Path("/scratch/xla2767/hold2/models/qwen3_8b_thinking_grpo_merged_v1/tokenizer_config.json")
+p = Path("/scratch/xla2767/hold2/models/qwen3_8b_miner/tokenizer_config.json")
 data = json.loads(p.read_text())
 
 data["eos_token"] = "<|im_end|>"

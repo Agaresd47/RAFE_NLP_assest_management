@@ -90,6 +90,12 @@ def build_parser():
     parser.add_argument("--split", default=DEFAULT_SPLIT, help="Dataset split to evaluate, e.g. test or validation.")
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument(
+        "--mode",
+        default="auto",
+        choices=["auto", "miner", "auditor", "pipeline"],
+        help="auto: infer from provided datasets; miner: run miner-only; auditor: run auditor-only; pipeline: miner then auditor.",
+    )
+    parser.add_argument(
         "--max-batches",
         type=int,
         default=None,
@@ -99,6 +105,11 @@ def build_parser():
         "--offline-datasets",
         action="store_true",
         help="Set HF_DATASETS_OFFLINE=1 before loading datasets.",
+    )
+    parser.add_argument(
+        "--keep-empty-miner",
+        action="store_true",
+        help="Keep miner rows whose parsed extraction list is empty. Default is to drop them.",
     )
     return parser
 
@@ -133,7 +144,7 @@ def wait_for_server(sglang_url):
     raise RuntimeError("sglang server startup timed out")
 
 
-async def infer_single(session, sglang_url, msgs, max_new_tokens):
+async def infer_single(session, sglang_url, msgs, max_new_tokens, enable_thinking=True):
     async with session.post(
         f"{sglang_url}/v1/chat/completions",
         json={
@@ -143,7 +154,7 @@ async def infer_single(session, sglang_url, msgs, max_new_tokens):
             "temperature": 0.1,
             "top_p": 0.9,
             "extra_body": {
-                "chat_template_kwargs": {"enable_thinking": True},
+                "chat_template_kwargs": {"enable_thinking": enable_thinking},
                 "separate_reasoning": False,
             },
         },
@@ -156,14 +167,24 @@ async def infer_single(session, sglang_url, msgs, max_new_tokens):
         return {"content": message.get("content"), "response": data}
 
 
-async def infer_batch_async(sglang_url, batch_messages, max_new_tokens=512):
+async def infer_batch_async(sglang_url, batch_messages, max_new_tokens=512, enable_thinking=True):
     async with aiohttp.ClientSession() as session:
-        tasks = [infer_single(session, sglang_url, msgs, max_new_tokens) for msgs in batch_messages]
+        tasks = [
+            infer_single(session, sglang_url, msgs, max_new_tokens, enable_thinking=enable_thinking)
+            for msgs in batch_messages
+        ]
         return await asyncio.gather(*tasks)
 
 
-def infer_batch(sglang_url, batch_messages, max_new_tokens=512):
-    return asyncio.run(infer_batch_async(sglang_url, batch_messages, max_new_tokens))
+def infer_batch(sglang_url, batch_messages, max_new_tokens=512, enable_thinking=True):
+    return asyncio.run(
+        infer_batch_async(
+            sglang_url,
+            batch_messages,
+            max_new_tokens=max_new_tokens,
+            enable_thinking=enable_thinking,
+        )
+    )
 
 
 def parse_output(raw):
@@ -272,6 +293,23 @@ def build_direct_auditor_inputs(auditor_split):
     return auditor_inputs
 
 
+def build_direct_miner_inputs(miner_split):
+    miner_inputs = []
+    for x in miner_split:
+        messages = x.get("messages") or []
+        if len(messages) < 2:
+            continue
+        miner_inputs.append(
+            (
+                x.get("ticker", ""),
+                x.get("form", ""),
+                x.get("report_date", ""),
+                messages[1]["content"],
+            )
+        )
+    return miner_inputs
+
+
 def main():
     args = build_parser().parse_args()
     if args.offline_datasets:
@@ -284,14 +322,85 @@ def main():
     miner_ds = load_dataset_source(args.miner_dataset, cache_dir=args.dataset_cache_dir)
     auditor_ds = load_dataset_source(args.auditor_dataset, cache_dir=args.dataset_cache_dir)
 
-    auditor_split = resolve_split(auditor_ds, args.split)
+    auditor_split = resolve_split(auditor_ds, args.split) if auditor_ds is not None else None
     miner_split = resolve_split(miner_ds, args.split) if miner_ds is not None else None
 
-    direct_auditor_mode = miner_split is None
-    if not direct_auditor_mode and "cot_visibility" not in getattr(auditor_split, "column_names", []):
-        direct_auditor_mode = True
+    mode = args.mode
+    if mode == "auto":
+        if miner_split is not None and auditor_split is None:
+            mode = "miner"
+        elif miner_split is not None and auditor_split is not None:
+            if "cot_visibility" in getattr(auditor_split, "column_names", []):
+                mode = "pipeline"
+            else:
+                mode = "auditor"
+        elif auditor_split is not None:
+            mode = "auditor"
+        else:
+            raise ValueError("No dataset provided. Supply --miner-dataset and/or --auditor-dataset.")
+
+    if mode == "miner":
+        if miner_split is None:
+            raise ValueError("--mode miner requires --miner-dataset")
+        print("\n=== Direct Miner Mode ===")
+        miner_inputs = build_direct_miner_inputs(miner_split)
+        if args.max_batches is not None:
+            miner_inputs = miner_inputs[: args.max_batches * args.batch_size]
+        print(f"Built {len(miner_inputs)} direct miner prompts.")
+
+        rows = []
+        for i in tqdm(range(0, len(miner_inputs), args.batch_size)):
+            batch = miner_inputs[i : i + args.batch_size]
+            msgs = [
+                [{"role": "system", "content": SYSTEM_MINER}, {"role": "user", "content": item[3]}]
+                for item in batch
+            ]
+            outputs = infer_batch(args.sglang_url, msgs, max_new_tokens=2048, enable_thinking=False)
+
+            for (ticker, form, date, user_prompt), out in zip(batch, outputs):
+                content, response = get_content_and_response(out)
+                pred = parse_output(content)
+                extractions = pred.get("extractions", [])
+                if not isinstance(extractions, list):
+                    extractions = []
+                rows.append(
+                    {
+                        "Date": date,
+                        "Symbol": ticker,
+                        "Form": form,
+                        "ExtractionCount": len(extractions),
+                        "Output": content,
+                        "Extractions": extractions,
+                        "Think": extract_think_text(content, response),
+                        "Prompt": user_prompt,
+                    }
+                )
+
+        df = pd.DataFrame(rows)
+        if not args.keep_empty_miner and not df.empty and "ExtractionCount" in df.columns:
+            df = df[df["ExtractionCount"] > 0].reset_index(drop=True)
+            rows = [row for row in rows if len(row.get("Extractions", [])) > 0]
+        if not df.empty:
+            df = df.sort_values(["Symbol", "Date"]).reset_index(drop=True)
+        Path(args.output_csv).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.output_json).parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(args.output_csv, index=False)
+        Path(args.output_json).write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"\nSaved miner CSV to {args.output_csv}, rows={len(df)}")
+        print(f"Saved miner JSON to {args.output_json}, rows={len(rows)}")
+        print(df.head(10))
+        return
+
+    direct_auditor_mode = mode == "auditor"
+    if mode == "pipeline":
+        if miner_split is None or auditor_split is None:
+            raise ValueError("--mode pipeline requires both --miner-dataset and --auditor-dataset")
+        if "cot_visibility" not in getattr(auditor_split, "column_names", []):
+            raise ValueError("--mode pipeline expects auditor dataset with cot_visibility column")
 
     if direct_auditor_mode:
+        if auditor_split is None:
+            raise ValueError("--mode auditor requires --auditor-dataset")
         print("\n=== Direct Auditor Mode ===")
         auditor_inputs = build_direct_auditor_inputs(auditor_split)
         if args.max_batches is not None:
@@ -322,7 +431,7 @@ def main():
                 [{"role": "system", "content": SYSTEM_MINER}, {"role": "user", "content": x["messages"][1]["content"]}]
                 for x in batch
             ]
-            outputs = infer_batch(args.sglang_url, msgs, max_new_tokens=2048)
+            outputs = infer_batch(args.sglang_url, msgs, max_new_tokens=2048, enable_thinking=False)
 
             for x, out in zip(batch, outputs):
                 content, response = get_content_and_response(out)
@@ -377,7 +486,7 @@ def main():
             [{"role": "system", "content": SYSTEM_AUDITOR}, {"role": "user", "content": item[4]}]
             for item in batch
         ]
-        outputs = infer_batch(args.sglang_url, msgs, max_new_tokens=1024)
+        outputs = infer_batch(args.sglang_url, msgs, max_new_tokens=1024, enable_thinking=True)
 
         for (ticker, form, date, factor, _), out in zip(batch, outputs):
             content, response = get_content_and_response(out)

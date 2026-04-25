@@ -78,6 +78,74 @@
 
 不要再默认把 auditor 输出理解成单个 assistant JSON。
 
+## 当前 extract 支线
+
+如果当前目标不是 `task1.3 / Auditor`，而是 `task1.2 / Miner / extract`，当前更务实的路线不是“一次性整套 schema 输出”，而是：
+
+1. 先把训练样本拆成 single-question extract。
+2. 训练时只让模型学：
+   - 单个 `factor + question_key`
+   - 对应的 quote 列表 JSON
+3. 推理时再循环所有 question 并聚合结果。
+
+如果继续往前推进，当前还有一条更新的 `v5` 路线：
+
+1. 输入不再是单个 question。
+2. 改成单个 factor block。
+3. 一个 factor block 下面带多个 candidate questions。
+4. 允许返回空 `extractions`，让模型学会“这个 factor 在当前 filing 里没答案”。
+5. 默认从 `v4` adapter warm start，而不是从 base 冷启动。
+
+当前这条 extract 支线的关键脚本是：
+
+- dataset builder:
+  - `build_sft_extract_v4.py`
+- trainer:
+  - `train_sft_extract_v4.py`
+- factor-level v5 builder:
+  - `build_sft_extract_v5.py`
+- factor-level v5 trainer:
+  - `train_sft_extract_v5.py`
+- single-question sanity check:
+  - `eval_try_sft.py`
+- full-schema aggregate inference:
+  - `infer_extract_aggregate.py`
+
+当前 extract 支线默认目录是：
+
+- dataset:
+  - `/scratch/xla2767/hold2/data/nlp/hf_extract_sft_v4`
+- adapter:
+  - `/scratch/xla2767/hold2/data/nlp/qwen3_8b_extract_sft_v4_out`
+- v5 dataset:
+  - `/scratch/xla2767/hold2/data/nlp/hf_extract_sft_v5`
+- v5 adapter:
+  - `/scratch/xla2767/hold2/data/nlp/qwen3_8b_extract_sft_v5_out`
+
+当前 extract 支线的几个重要约束是：
+
+- 训练侧当前默认是 `Qwen3-8B`
+- packing 关闭
+- 只对 assistant JSON 算 loss
+- 同一样本内 quote 已做去重
+- 训练样本已经按 `factor + question_key` 拆开
+- 高频 question 已做一定程度重平衡
+- `v5` 默认从 `v4` adapter warm start
+
+当前最重要的工程判断是：
+
+- 不要默认要求模型一次性从整篇 filing 输出全 schema 大 JSON
+- 更稳定的做法是：
+  - 单 question 推理
+  - 再由聚合脚本合并成最终结果
+
+当前 `infer_extract_aggregate.py` 还支持：
+
+- `--raw-file`
+- 或者 `--ticker --form --date`
+
+后者会自动去 `MDA_Raw/<ticker>/<form>/` 下定位原文件。
+
 ## 远端计算节点协作约定
 
 这个项目的训练、merge、推理这类重活，可能会放到用户临时开出的远端计算节点上执行。
