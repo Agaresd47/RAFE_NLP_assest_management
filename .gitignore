@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 unsloth_compiled_cache/
+miner_auditor_pipeline/data
